@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+[ "${TRACE:-false}" = 'true' ] && set -x
+
+URL=http://localhost:3000
+
+for i in `seq 1 130`; do
+    if curl --fail -sL "$URL"; then
+        break
+    fi
+    sleep 5
+done
+
+HTML_FRAGMENT='Thank you for using Sharkey!'
+
+HOME_HTML="$(curl --fail -sL "$URL")"
+if ! echo "$HOME_HTML" | grep "$HTML_FRAGMENT" >/dev/null; then
+    echo "Failed to find '$HTML_FRAGMENT' in home page:"
+    echo "$HOME_HTML"
+    exit 1
+fi

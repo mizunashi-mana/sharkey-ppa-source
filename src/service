@@ -1,0 +1,75 @@
+[Unit]
+Description=https://activitypub.software/TransFem-org/Sharkey
+After=network.target
+
+[Service]
+Type=simple
+User=sharkey
+WorkingDirectory=/var/lib/sharkey/live/packages/backend
+Environment="NODE_ENV=production"
+EnvironmentFile=-/etc/default/sharkey
+ExecStartPre=/usr/bin/sharkey-prestart-hook
+ExecStart=/usr/bin/node /var/lib/sharkey/live/packages/backend/built/boot/entry.js
+ExecReload=/bin/kill -SIGUSR1 $MAINPID
+TimeoutSec=15
+Restart=on-failure
+StartLimitBurst=2
+
+# Security
+NoNewPrivileges=true
+CapabilityBoundingSet=
+UMask=0027
+
+# Sandboxing
+DevicePolicy=closed
+LockPersonality=true
+RemoveIPC=true
+PrivateTmp=true
+PrivateDevices=true
+PrivateUsers=true
+PrivateMounts=true
+PrivateIPC=true
+ProtectProc=invisible
+ProtectSystem=strict
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHome=true
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET
+RestrictAddressFamilies=AF_INET6
+RestrictAddressFamilies=AF_NETLINK
+RestrictAddressFamilies=AF_UNIX
+
+# System Call Filtering
+SystemCallArchitectures=native
+SystemCallFilter=~@chown
+SystemCallFilter=~@clock
+SystemCallFilter=~@cpu-emulation
+SystemCallFilter=~@debug
+SystemCallFilter=~@ipc
+SystemCallFilter=pipe
+SystemCallFilter=pipe2
+SystemCallFilter=~@keyring
+SystemCallFilter=~@memlock
+SystemCallFilter=~@module
+SystemCallFilter=~@mount
+SystemCallFilter=~@obsolete
+SystemCallFilter=~@privileged
+SystemCallFilter=~@raw-io
+SystemCallFilter=~@reboot
+SystemCallFilter=~@resources
+SystemCallFilter=~@setuid
+SystemCallFilter=~@swap
+
+# Directory Filtering
+ReadWritePaths=/var/lib/sharkey/work
+ReadWritePaths=/var/lib/sharkey/files
+
+[Install]
+WantedBy=multi-user.target

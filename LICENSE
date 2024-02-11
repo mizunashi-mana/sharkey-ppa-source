@@ -1,0 +1,8 @@
+Apache-2.0 OR MPL-2.0
+---
+
+The default throughout the repository are dual-licensed under the Mozilla Public License 2.0 (at https://mozilla.org/MPL/2.0/) and the Apache License 2.0 (at https://www.apache.org/licenses/LICENSE-2.0), unless the header specifies another license.
+
+The repository provides packages built by the packaging and Sharkey sources and including npm packages by Sharkey. They have own license terms:
+* Sharkey is licensed under the AGPLv3: https://activitypub.software/TransFem-org/Sharkey/-/blob/stable/LICENSE.
+* Dependencies are licensed under each terms which included in packages.  See them.

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+[ "${TRACE:-false}" = 'true' ] && set -x
+
+cd "$1"
+
+pnpm install --force --frozen-lockfile
+pnpm run build
+
+rm -rf node_modules
+pnpm install \
+    --filter backend \
+    --filter megalodon \
+    --filter misskey-js \
+    --force \
+    --prod \
+    --frozen-lockfile

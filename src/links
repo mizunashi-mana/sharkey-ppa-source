@@ -1,0 +1,2 @@
+etc/sharkey/config.yml	var/lib/sharkey/live/.config/default.yml
+var/lib/sharkey/files	var/lib/sharkey/live/files

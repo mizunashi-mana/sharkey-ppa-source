@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+[ "${TRACE:-false}" = 'true' ] && set -x
+
+mkdir -p "$1"
+LIVE_DIR="$(cd "$1" && pwd)"
+
+rsync --recursive --relative --links \
+    CHANGELOG.md \
+    CONTRIBUTING.md \
+    COPYING \
+    LICENSE \
+    README.md \
+    SECURITY.md \
+    package.json \
+    built \
+    node_modules \
+    packages/backend/package.json \
+    packages/backend/ormconfig.js \
+    packages/backend/check_connect.js \
+    packages/backend/assets \
+    packages/backend/migration \
+    packages/backend/built \
+    packages/backend/node_modules \
+    packages/megalodon/package.json \
+    packages/megalodon/node_modules \
+    packages/megalodon/lib \
+    packages/misskey-js/package.json \
+    packages/misskey-js/built \
+    packages/misskey-js/node_modules \
+    packages/frontend/assets \
+    fluent-emojis/LICENSE \
+    fluent-emojis/dist \
+    "${LIVE_DIR}/"

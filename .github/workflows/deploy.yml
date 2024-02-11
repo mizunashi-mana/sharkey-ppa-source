@@ -1,0 +1,137 @@
+name: Build and Deploy
+
+on:
+    push:
+        branches: [ "main" ]
+        tags: [ "*" ]
+    pull_request:
+        branches: [ "main" ]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                include:
+                    -   distro_base: ubuntu
+                        distro: jammy
+                        arch: amd64
+                    -   distro_base: ubuntu
+                        distro: bionic
+                        arch: amd64
+                    -   distro_base: ubuntu
+                        distro: focal
+                        arch: amd64
+
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v4
+
+            -   name: Check package version
+                if: startsWith(github.ref, 'refs/tags/')
+                run: |
+                    env TRACE=true ./script/check-version "$GITHUB_REF_NAME"
+
+            -   name: Set up QEMU
+                uses: docker/setup-qemu-action@v3
+                with:
+                    platforms: linux/${{ matrix.arch }}
+
+            -   id: docker_setup_buildx
+                name: Set up Docker Buildx
+                uses: docker/setup-buildx-action@v3
+                with:
+                    platforms: linux/${{ matrix.arch }}
+
+            -   name: Build deb
+                uses: docker/build-push-action@v5
+                with:
+                    file: ./Dockerfile
+                    load: true
+                    target: pkgcontainer
+                    build-args: |
+                        DISTRO_BASE=${{ matrix.distro_base }}
+                        DISTRO=${{ matrix.distro }}
+                    platforms: ${{ steps.docker_setup_buildx.outputs.platforms }}
+                    tags: ghcr.io/mizunashi-mana/sharkey-ppa-source/pkgcontainer
+                    cache-from: type=gha
+                    cache-to: type=gha
+
+            -   name: Copy packages
+                run: |
+                    docker create --name pkg ghcr.io/mizunashi-mana/sharkey-ppa-source/pkgcontainer
+                    docker cp pkg:/workdir/dest ./dest
+                    docker rm pkg
+                    for file in $(find ./dest -type f); do
+                        mv "$file" "$(dirname "$file")/${DEST_PREFIX}_$(basename "$file")"
+                    done
+                env:
+                    DEST_PREFIX: ${{ matrix.distro_base }}-${{ matrix.distro }}-${{ matrix.arch }}
+
+            -   name: Test deb version
+                if: startsWith(github.ref, 'refs/tags/')
+                run: |
+                    env TRACE=true ./script/test-version "$GITHUB_REF_NAME" ./dest/*.deb
+
+            -   name: Archive artifacts
+                uses: actions/upload-artifact@v4
+                with:
+                    name: pkg-${{ matrix.distro_base }}-${{ matrix.distro }}-${{ matrix.arch }}
+                    retention-days: 1
+                    path: |
+                        ./dest/*
+
+            -   name: Build compose images
+                uses: docker/bake-action@v4
+                with:
+                    files: ./docker-compose.yml
+                    load: true
+                    set: |
+                        *.cache-from=type=gha
+                        *.cache-to=type=gha
+                        *.platform=${{ steps.docker_setup_buildx.outputs.platforms }}
+                        *.args.DISTRO_BASE=${{ matrix.distro_base }}
+                        *.args.DISTRO=${{ matrix.distro }}
+
+            -   name: Pull compose images
+                run: |
+                    docker compose --file docker-compose.yml \
+                        pull postgres redis
+
+            -   name: Up services and test
+                run: |
+                    docker compose --file docker-compose.yml \
+                        up --detach
+                    sleep 10
+                    env TRACE=true ./script/test-service
+                    docker compose --file ./docker-compose.yml logs
+
+    release:
+        needs:
+            - build
+        if: startsWith(github.ref, 'refs/tags/')
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Download artifacts for Ubuntu jammy / amd64
+                uses: actions/download-artifact@v4
+                with:
+                    name: pkg-ubuntu-jammy-amd64
+
+            -   name: Download artifacts for Ubuntu bionic / amd64
+                uses: actions/download-artifact@v4
+                with:
+                    name: pkg-ubuntu-bionic-amd64
+
+            -   name: Download artifacts for Ubuntu focal / amd64
+                uses: actions/download-artifact@v4
+                with:
+                    name: pkg-ubuntu-focal-amd64
+
+            -   name: Release
+                uses: softprops/action-gh-release@v1
+                with:
+                    files: |
+                        *.dsc
+                        *.deb
+                        *.changes
+                        *.buildinfo

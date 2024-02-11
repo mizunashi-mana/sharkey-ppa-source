@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+[ "${TRACE:-false}" = 'true' ] && set -x
+
+WORKDIR=/var/lib/sharkey/live/packages/backend
+cd "$WORKDIR"
+
+npx typeorm migration:run --dataSource ormconfig.js

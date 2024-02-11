@@ -1,0 +1,4 @@
+debian/etc/sharkey/config.yml etc/sharkey
+debian/usr/bin/sharkey-migrate usr/bin
+debian/usr/bin/sharkey-check-connect usr/bin
+debian/usr/bin/sharkey-prestart-hook usr/bin

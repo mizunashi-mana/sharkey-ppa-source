@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+[ "${TRACE:-false}" = 'true' ] && set -x
+
+/usr/bin/sharkey-check-connect
+
+if [ "${RUN_MIGRATION_ON_START:-false}" = 'true' ]; then
+    /usr/bin/sharkey-migrate
+fi
