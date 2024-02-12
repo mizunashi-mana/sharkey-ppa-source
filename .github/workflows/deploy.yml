@@ -54,7 +54,7 @@ jobs:
             -   name: Copy packages
                 run: |
                     docker create --name pkg ghcr.io/mizunashi-mana/sharkey-ppa-source/pkgcontainer
-                    docker cp pkg:/workdir/dest ./dest
+                    docker cp pkg:/build_dir/dest ./dest
                     docker rm pkg
                     for file in $(find ./dest -type f); do
                         mv "$file" "$(dirname "$file")/${DEST_PREFIX}_$(basename "$file")"
