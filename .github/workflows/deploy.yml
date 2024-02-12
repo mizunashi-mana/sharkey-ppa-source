@@ -30,7 +30,7 @@ jobs:
             -   name: Check package version
                 if: startsWith(github.ref, 'refs/tags/')
                 run: |
-                    env TRACE=true ./script/check-version "$GITHUB_REF_NAME"
+                    env TRACE=true ./scripts/check-version "$GITHUB_REF_NAME"
 
             -   name: Set up QEMU
                 uses: docker/setup-qemu-action@v3
@@ -71,7 +71,7 @@ jobs:
             -   name: Test deb version
                 if: startsWith(github.ref, 'refs/tags/')
                 run: |
-                    env TRACE=true ./script/test-version "$GITHUB_REF_NAME" ./dest/*.deb
+                    env TRACE=true ./scripts/test-version "$GITHUB_REF_NAME" ./dest/*.deb
 
             -   name: Archive artifacts
                 uses: actions/upload-artifact@v4
@@ -103,7 +103,7 @@ jobs:
                     docker compose --file docker-compose.yml \
                         up --detach
                     sleep 10
-                    env TRACE=true ./script/test-service
+                    env TRACE=true ./scripts/test-service
                     docker compose --file ./docker-compose.yml logs
 
     release:

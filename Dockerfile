@@ -13,13 +13,14 @@ FROM base AS builder
 
 WORKDIR "${BUILD_DIR}"
 
-COPY env "${BUILD_DIR}/env"
-COPY src "${BUILD_DIR}/src"
-COPY script "${BUILD_DIR}/script"
+COPY envs "${BUILD_DIR}/envs"
+COPY files "${BUILD_DIR}/files"
+COPY templates "${BUILD_DIR}/templates"
+COPY scripts "${BUILD_DIR}/scripts"
 COPY Makefile "${BUILD_DIR}/Makefile"
 
 RUN <<EOT
-script/install-build-deps
+scripts/install-build-deps
 
 env TRACE=true make
 
@@ -54,16 +55,16 @@ ENV DEB_FILE="${BUILD_DIR}/dest/sharkey.deb"
 
 COPY --from=pkgcontainer "${BUILD_DIR}/dest/"*.deb "${DEB_FILE}"
 
-COPY script/install-deb "${BUILD_DIR}/script/install-deb"
+COPY envs "${BUILD_DIR}/envs"
+COPY scripts "${BUILD_DIR}/scripts"
 RUN <<EOT
-env \
-    TRACE=true \
-    "${BUILD_DIR}/script/install-deb"
+env TRACE=true "${BUILD_DIR}/scripts/install-deb"
 
 apt-get clean
 rm -rf \
     "${BUILD_DIR}/dest" \
-    "${BUILD_DIR}/script" \
+    "${BUILD_DIR}/envs" \
+    "${BUILD_DIR}/scripts" \
     /var/lib/apt/lists/*
 EOT
 

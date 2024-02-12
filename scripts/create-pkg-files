@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+[ "${TRACE:-false}" = 'true' ] && set -x
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+eval "$("$SCRIPT_DIR/init-bash-source")"
+
+mkdir -p "$1"
+OUTPUT_PKG_DIR="$(realpath "$1")"
+
+create_source_tarball() {
+    mkdir -p "$(dirname "$1")"
+    local output_file="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+
+    local src_dir="$(dirname "$output_file")/orig_src"
+    mkdir -p "$(dirname "$src_dir")"
+
+    git clone \
+        --branch "$SHARKEY_SOURCE_GIT_COMMIT_REF" \
+        --depth 1 \
+        "$SHARKEY_SOURCE_GIT_REPO" "$src_dir"
+
+    cd "$src_dir" && git submodule update --init --recursive --depth 1
+    rm -rf "$src_dir/.git" "$src_dir"/*/.git
+
+    tar -C "$src_dir" -czf "$output_file" .
+}
+
+TARBALL_FILE="$OUTPUT_PKG_DIR/sharkey_$PKG_VERSION_DEB_MAIN.orig.tar.gz"
+if [ ! -e "$TARBALL_FILE" ]; then
+    create_source_tarball "$TARBALL_FILE"
+fi
+
+FILES_DIR="$OUTPUT_PKG_DIR/sharkey-$PKG_VERSION_DEB_MAIN"
+DEBIAN_FILES_DIR="$FILES_DIR/debian"
+
+rm -rf "$FILES_DIR"
+
+mkdir -p "$FILES_DIR"
+tar -C "$FILES_DIR" -zxf "$TARBALL_FILE"
+cp -r "$PROJECT_DIR/files" "$DEBIAN_FILES_DIR"
+m4 \
+    "-D__NODE_MAJOR_VERSION__=$NODE_MAJOR_VERSION" \
+    "$PROJECT_DIR/templates/control.m4" > "$DEBIAN_FILES_DIR/control"

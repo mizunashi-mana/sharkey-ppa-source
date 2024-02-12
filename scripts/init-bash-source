@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+[ "${TRACE:-false}" = 'true' ] && set -x
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+cat <<EOS
+PROJECT_DIR=$PROJECT_DIR
+
+source '$PROJECT_DIR/envs/default.env'
+if [ -e '$PROJECT_DIR/envs/custom.env' ]; then
+    source '$PROJECT_DIR/envs/custom.env'
+fi
+
+PKG_VERSION_DEB_MAIN="\${PKG_VERSION_SHARKEY//-/+}"
+EOS

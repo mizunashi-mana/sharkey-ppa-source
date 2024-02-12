@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+[ "${TRACE:-false}" = 'true' ] && set -x
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+eval "$("$SCRIPT_DIR/init-bash-source")"
+
+TARGET_DIR="$(realpath "$1")/sharkey-$PKG_VERSION_DEB_MAIN"
+cd "$TARGET_DIR"
+
+dpkg-buildpackage \
+    -rootcmd=fakeroot \
+    --unsigned-changes \
+    --unsigned-source
