@@ -16,12 +16,6 @@ jobs:
                     -   distro_base: ubuntu
                         distro: jammy
                         arch: amd64
-                    -   distro_base: ubuntu
-                        distro: bionic
-                        arch: amd64
-                    -   distro_base: ubuntu
-                        distro: focal
-                        arch: amd64
 
         steps:
             -   name: Checkout repository
